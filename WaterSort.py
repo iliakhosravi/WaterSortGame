@@ -77,8 +77,15 @@ class CircularLinkedList:
         current = self.head
         for _ in range(stack_index):
             current = current.next
+        counter = 0
+        for i in range(current.stack.size() - 1, -1, -1):
+            if current.stack.items[i] == 'empty':
+                current.stack.pop()
+                counter = counter + 1
         current.stack.pop()
-        current.stack.push("empty")
+        for i in range(counter + 1):
+            current.stack.push("empty")
+        
     
     def get_node(self, stack_index):
         current = self.head
@@ -114,6 +121,20 @@ class CircularLinkedList:
         
         return True
     
+    def get_node_count(self):
+        if not self.head:
+            return 0
+
+        count = 1
+        temp = self.head
+        while True:
+            temp = temp.next
+            if temp == self.head:
+                break
+            count += 1
+
+        return count
+    
     
 
         
@@ -139,14 +160,29 @@ class WaterSortGame:
         self.bottle_selected_number = -1
         self.bottle_selected = -1
         self.bottle = CircularLinkedList()
+        self.undo_stack = Stack()
+        self.redo_stack = Stack()
 
 
-        for index in range(0, len(colors_list)):
-            # bottle_stack = Stack()
+        # Create a dictionary to track color counts
+        color_counts = {color: 0 for color in colors_list}
+
+        for index in range(len(colors_list)):
             self.bottle.append_stack()
-            for _ in range(0, max_size_of_bottles):
-                self.bottle.push_to_stack(index, random.choice(colors_list))
-           
+            for _ in range(max_size_of_bottles):
+                # Randomly choose a color that hasn't reached max_size_of_bottles
+                available_colors = [color for color in colors_list if color_counts[color] < max_size_of_bottles]
+                if not available_colors:
+                    # All colors have reached max_size_of_bottles, choose from all colors
+                    chosen_color = random.choice(colors_list)
+                else:
+                    chosen_color = random.choice(available_colors)
+
+                # Increment the color count
+                color_counts[chosen_color] += 1
+
+                # Push the chosen color to the stack
+                self.bottle.push_to_stack(index, chosen_color)
         
         # create empty bottle
         self.bottle.append_stack()
@@ -156,21 +192,29 @@ class WaterSortGame:
 
     # ----------------------------- display --------------------------------------
     def display(self):
+        # print(self.save_state())
         
-        self.bottle.display_stacks()
-        print("--------#-------------")
+        # self.bottle.display_stacks()
+        # print("--------#-------------")
     
         current = self.bottle.head
-        # print(current)
+        
         for j in range(self.max_size_of_bottles , 0, -1): #decsending
 
-            for i in range(len(self.colors_list) + 1):
-                print(current.stack.items[self.max_size_of_bottles - (self.max_size_of_bottles - (j - 1) )] + "   ", end="")
-                current = current.next
+            for i in range(self.bottle.get_node_count()):
+                if current.stack.size() >= j:   # it is for checking if the empty bottle is add or no
+                    print(current.stack.items[self.max_size_of_bottles - (self.max_size_of_bottles - (j - 1) )] + "   ", end="")
+                    current = current.next
+                else:
+                    current = current.next
+                
+
             print('\n')
 
         # print(self.bottle.get_top_of_node(3))
         print("--------#-------------")
+        # print(self.bottle.get_node_count())
+        # print(self.has_won())
         # print(self.bottle.get_node(1))
         # print(self.select(1))
         # print(self.bottle.get_top_of_node(4))
@@ -188,7 +232,7 @@ class WaterSortGame:
         is_selected = True
         bottle_items = current.stack.all()
         counter = 0
-        for i in range(self.max_size_of_bottles -1):
+        for i in range(current.stack.size() -1):
             if bottle_items[i] == bottle_items[i+1]:
                 counter = counter + 1
 
@@ -254,7 +298,7 @@ class WaterSortGame:
         if current.stack.items[0] == "empty" or self.bottle.get_top_of_node(destination_bottle_number) == self.bottle.get_top_of_node(origin_bottle_number):
             
             counter = 0
-            for i in range(self.max_size_of_bottles - 1 , -1, -1):
+            for i in range(current.stack.size() - 1 , -1, -1):
                 if current.stack.items[i] == "empty":
                     current.stack.pop()
                     counter = counter + 1
@@ -304,7 +348,86 @@ class WaterSortGame:
             current_selected.stack.push(temp[i]) 
     
         return True
+    
+    # --------------- replace color -----------------------
+    def replace_color(self, first_color, second_color):
+        current = self.bottle.head
+        for _ in range(self.bottle.get_node_count()):
+            for i in range(current.stack.size()):
+                if current.stack.items[i] == first_color:
+                    current.stack.items[i] = second_color
+            current = current.next
+
+    #---------------- add empty bottle ----------------
+    def add_empty_bottle(self):
+        self.bottle.append_stack()
+        for _ in range(int((self.max_size_of_bottles)/2)):
+            self.bottle.push_to_stack(len(self.colors_list) + 1, "empty")
+
+
+
+
+    # -------------- check wining ---------------------
+    def has_won(self):
+        current = self.bottle.head
+        for i in range(self.bottle.get_node_count()):
+            for j in range(current.stack.size()):
+                if current.stack.items[0] != current.stack.items[j]:
+                    return False
+                
+            current = current.next
+        return True
+    
         
+# ---------------- undo ------------------
+    def save_state(self):
+        state = []
+        node = self.bottle.head
+        for i in range(self.bottle.get_node_count()):
+            state.append(node.stack.all()[:]) # using the list slicing notation to create a shallow copy of the list
+            node = node.next
+
+        # self.undo_stack.append(state)
+        self.undo_stack.push(state)
+        print(self.undo_stack.items)
+
+            
+
+
+    def undo(self):
+            
+        self.redo_stack.push(self.undo_stack.items[-1])   
+        self.undo_stack.pop()
+        
+        current = self.bottle.head
+        for i in range(len(self.undo_stack.items[-1])):
+            # if len(self.undo_stack.items[-1]) != self.bottle.get_node_count():
+            #     last = self.bottle.head
+            #     for i in range(self.bottle.get_node_count()):
+            #         last.next
+            #     for j in range(last.stack.size()):
+            #         last.stack.pop()                  # bayad node akhari hazf sheh
+            current.stack.items = self.undo_stack.items[-1][i]
+            current = current.next
+        
+        
+        print(self.undo_stack.items)
+            
+
+    def redo(self):
+    
+        self.undo_stack.push(self.redo_stack.items[-1])    
+        
+        current = self.bottle.head
+        for i in range(len(self.redo_stack.items[-1])):
+            current.stack.items = self.redo_stack.items[-1][i]
+            current = current.next
+        
+        self.redo_stack.pop()
+
+
+
+
         
 
 
@@ -313,15 +436,98 @@ class WaterSortGame:
 
 def main():
     game = WaterSortGame(5, ['yellow', 'pink', 'blue'])
-    game.display()
-    game.select(1)
+    # game = WaterSortGame(5, ['yellow'])
+    # game.display()
+    # game.add_empty_bottle()
+    # game.replace_color('yellow', 'orange')
+    
+    # game.select(1)
+    # game.select(2)
     # game.selectPrevious()
     # game.pour(3)
-    game.swap(3)
+    # game.swap(3)
     
     # game.select(2)
-    # game.pour(3)
+    # game.pour(4)
     game.display()
+    
+    game.select(0)
+    game.save_state()
+    print('--------')
+    game.pour(3)
+    game.save_state()
+    game.display()
+    game.add_empty_bottle()
+    game.display()
+    
+
+    # Print the updated color_list
+    game.undo()
+    
+    
+
+    game.display()
+    game.redo()
+    game.display()
+    
+    
+
+    # start = input("type start to start game: ")
+    # if start == "start":
+    #     max_size_of_bottles = int(input("please enter the max size of bottles: "))
+    #     color_list = []
+    #     input_string = input("Enter colors separated by space: ")
+    #     colors = input_string.split()
+    #     color_list.extend(colors)
+        
+    #     game = WaterSortGame(max_size_of_bottles, color_list)
+
+    #     game.display()
+    #     add_empty_bottle_count = 0
+    #     while not game.has_won():
+    #         method = input("please write your method to make change: ")
+    #         # if method == 'select' or method == 'selectNext' or method == 'selectPrevious' or method == 'deselect':
+    #         if method == 'select':
+    #             number = int(input("enter the number of stack that you want to select it: "))
+    #             game.select(number)
+
+    #         if method == 'selectNext':
+    #             game.selectNext()
+
+    #         if method == 'selectPrevious':
+    #             game.selectPrevious()
+
+    #         if method == 'deselect':
+    #             game.deSelect()
+            
+    #         if method == 'pour':
+    #             number = int(input('enter the bottle number that you want to pour in: '))
+    #             game.pour(number)
+            
+    #         if method == 'swap':
+    #             number = int(input('enter the bottle number that you want to swap with: '))
+    #             game.swap(number)
+
+    #         if method == 'replaceColor':
+    #             color1 = input('enter the first color name: ')
+    #             color2 = input('enter the second color name: ')
+    #             game.replace_color(color1, color2)
+            
+    #         if method == 'AddEmptyBottle' and add_empty_bottle_count == 0:
+    #             game.add_empty_bottle()
+
+    #         game.display()
+    #         if game.has_won():
+    #             print('YOU WON!')
+            
+
+  
+
+
+
+
+    
+
 
 
 
