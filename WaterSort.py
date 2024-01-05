@@ -192,10 +192,6 @@ class WaterSortGame:
 
     # ----------------------------- display --------------------------------------
     def display(self):
-        # print(self.save_state())
-        
-        # self.bottle.display_stacks()
-        # print("--------#-------------")
     
         current = self.bottle.head
         
@@ -211,13 +207,9 @@ class WaterSortGame:
 
             print('\n')
 
-        # print(self.bottle.get_top_of_node(3))
+        
         print("--------#-------------")
-        # print(self.bottle.get_node_count())
-        # print(self.has_won())
-        # print(self.bottle.get_node(1))
-        # print(self.select(1))
-        # print(self.bottle.get_top_of_node(4))
+        
 
 
     # ---------------------------- selection part ---------------------------------
@@ -326,11 +318,6 @@ class WaterSortGame:
         for _ in range(bottle_number):
             current_destination = current_destination.next
 
-        # Check if the selected bottle and destination bottle are not empty
-        # if current_selected.stack.is_empty() or current_destination.stack.is_empty():
-        #     return False
-
-        # Swap the contents of the selected bottle and destination bottle
         temp = []
         for i in range(self.max_size_of_bottles):
             temp.append(current_destination.stack.items[i])
@@ -387,12 +374,8 @@ class WaterSortGame:
             state.append(node.stack.all()[:]) # using the list slicing notation to create a shallow copy of the list
             node = node.next
 
-        # self.undo_stack.append(state)
         self.undo_stack.push(state)
-        print(self.undo_stack.items)
-
-            
-
+        
 
     def undo(self):
             
@@ -401,18 +384,9 @@ class WaterSortGame:
         
         current = self.bottle.head
         for i in range(len(self.undo_stack.items[-1])):
-            # if len(self.undo_stack.items[-1]) != self.bottle.get_node_count():
-            #     last = self.bottle.head
-            #     for i in range(self.bottle.get_node_count()):
-            #         last.next
-            #     for j in range(last.stack.size()):
-            #         last.stack.pop()                  # bayad node akhari hazf sheh
             current.stack.items = self.undo_stack.items[-1][i]
             current = current.next
         
-        
-        print(self.undo_stack.items)
-            
 
     def redo(self):
     
@@ -428,97 +402,68 @@ class WaterSortGame:
 
 
 
-        
-
-
-
-
-
 def main():
-    game = WaterSortGame(5, ['yellow', 'pink', 'blue'])
-    # game = WaterSortGame(5, ['yellow'])
-    # game.display()
-    # game.add_empty_bottle()
-    # game.replace_color('yellow', 'orange')
     
-    # game.select(1)
-    # game.select(2)
-    # game.selectPrevious()
-    # game.pour(3)
-    # game.swap(3)
-    
-    # game.select(2)
-    # game.pour(4)
-    game.display()
-    
-    game.select(0)
-    game.save_state()
-    print('--------')
-    game.pour(3)
-    game.save_state()
-    game.display()
-    game.add_empty_bottle()
-    game.display()
-    
-
-    # Print the updated color_list
-    game.undo()
-    
-    
-
-    game.display()
-    game.redo()
-    game.display()
-    
-    
-
-    # start = input("type start to start game: ")
-    # if start == "start":
-    #     max_size_of_bottles = int(input("please enter the max size of bottles: "))
-    #     color_list = []
-    #     input_string = input("Enter colors separated by space: ")
-    #     colors = input_string.split()
-    #     color_list.extend(colors)
+    start = input("type start to start game: ")
+    if start == "start":
+        max_size_of_bottles = int(input("please enter the max size of bottles: "))
+        color_list = []
+        input_string = input("Enter colors separated by space: ")
+        colors = input_string.split()
+        color_list.extend(colors)
         
-    #     game = WaterSortGame(max_size_of_bottles, color_list)
+        game = WaterSortGame(max_size_of_bottles, color_list)
+        game.save_state()
 
-    #     game.display()
-    #     add_empty_bottle_count = 0
-    #     while not game.has_won():
-    #         method = input("please write your method to make change: ")
-    #         # if method == 'select' or method == 'selectNext' or method == 'selectPrevious' or method == 'deselect':
-    #         if method == 'select':
-    #             number = int(input("enter the number of stack that you want to select it: "))
-    #             game.select(number)
+        game.display()
+        add_empty_bottle_count = 0
+        while not game.has_won():
+            method = input("please write your method to make change: ")
+        
+            if method == 'select':
+                number = int(input("enter the number of stack that you want to select it: "))
+                game.select(number)
 
-    #         if method == 'selectNext':
-    #             game.selectNext()
+            if method == 'selectNext':
+                game.selectNext()
 
-    #         if method == 'selectPrevious':
-    #             game.selectPrevious()
+            if method == 'selectPrevious':
+                game.selectPrevious()
 
-    #         if method == 'deselect':
-    #             game.deSelect()
+            if method == 'deselect':
+                game.deSelect()
             
-    #         if method == 'pour':
-    #             number = int(input('enter the bottle number that you want to pour in: '))
-    #             game.pour(number)
+            if method == 'pour':
+                number = int(input('enter the bottle number that you want to pour in: '))
+                game.pour(number)
+                game.save_state()
             
-    #         if method == 'swap':
-    #             number = int(input('enter the bottle number that you want to swap with: '))
-    #             game.swap(number)
+            if method == 'swap':
+                number = int(input('enter the bottle number that you want to swap with: '))
+                game.swap(number)
+                game.save_state()
 
-    #         if method == 'replaceColor':
-    #             color1 = input('enter the first color name: ')
-    #             color2 = input('enter the second color name: ')
-    #             game.replace_color(color1, color2)
+            if method == 'replaceColor':
+                color1 = input('enter the first color name: ')
+                color2 = input('enter the second color name: ')
+                game.replace_color(color1, color2)
+                game.save_state()
             
-    #         if method == 'AddEmptyBottle' and add_empty_bottle_count == 0:
-    #             game.add_empty_bottle()
+            if method == 'AddEmptyBottle' and add_empty_bottle_count == 0:
+                game.add_empty_bottle()
+                game.save_state()
 
-    #         game.display()
-    #         if game.has_won():
-    #             print('YOU WON!')
+            if method == 'undo':
+                game.undo()
+                game.save_state()
+
+            if method == 'redo':
+                game.redo()
+                game.save_state()
+
+            game.display()
+            if game.has_won():
+                print('YOU WON!')
             
 
   
